@@ -1,0 +1,138 @@
+#include <stdio.h>
+#define MAX 100
+
+
+void readSparseMatrix(int matrix[MAX][3], const char* name) {
+    int nonZero;
+    printf("Enter %s sparse matrix:\n", name);
+    printf("Enter number of non-zero elements: ");
+    scanf("%d", &nonZero);
+
+    matrix[0][2] = nonZero;
+    printf("Enter the elements as row column value:\n");
+
+    int maxRow = 0, maxCol = 0;
+    for (int i = 1; i <= nonZero; i++) {
+        scanf("%d %d %d", &matrix[i][0], &matrix[i][1], &matrix[i][2]);
+        if (matrix[i][0] > maxRow) maxRow = matrix[i][0];
+        if (matrix[i][1] > maxCol) maxCol = matrix[i][1];
+    }
+
+    matrix[0][0] = maxRow + 1;
+    matrix[0][1] = maxCol + 1;
+}
+
+
+void printSparseMatrix(const char* title, int matrix[MAX][3]) {
+    printf("\n%s:\n", title);
+    printf("Row Col Val\n");
+    for (int i = 1; i <= matrix[0][2]; i++) {
+        printf("%d   %d   %d\n", matrix[i][0], matrix[i][1], matrix[i][2]);
+    }
+}
+
+
+void sortSparse(int matrix[MAX][3]) {
+    for (int i = 1; i <= matrix[0][2]; i++) {
+        for (int j = i + 1; j <= matrix[0][2]; j++) {
+            if (matrix[i][0] > matrix[j][0] || 
+               (matrix[i][0] == matrix[j][0] && matrix[i][1] > matrix[j][1])) {
+                for (int k = 0; k < 3; k++) {
+                    int temp = matrix[i][k];
+                    matrix[i][k] = matrix[j][k];
+                    matrix[j][k] = temp;
+                }
+            }
+        }
+    }
+}
+
+
+void addSparse(int a[MAX][3], int b[MAX][3], int res[MAX][3]) {
+    int i = 1, j = 1, k = 1;
+    res[0][0] = a[0][0];
+    res[0][1] = a[0][1];
+
+    while (i <= a[0][2] && j <= b[0][2]) {
+        if (a[i][0] == b[j][0] && a[i][1] == b[j][1]) {
+            int sum = a[i][2] + b[j][2];
+            if (sum != 0) {
+                res[k][0] = a[i][0];
+                res[k][1] = a[i][1];
+                res[k][2] = sum;
+                k++;
+            }
+            i++; j++;
+        } else if (a[i][0] < b[j][0] || 
+                  (a[i][0] == b[j][0] && a[i][1] < b[j][1])) {
+            res[k][0] = a[i][0];
+            res[k][1] = a[i][1];
+            res[k][2] = a[i][2];
+            i++; k++;
+        } else {
+            res[k][0] = b[j][0];
+            res[k][1] = b[j][1];
+            res[k][2] = b[j][2];
+            j++; k++;
+        }
+    }
+
+    while (i <= a[0][2]) {
+        res[k][0] = a[i][0];
+        res[k][1] = a[i][1];
+        res[k][2] = a[i][2];
+        i++; k++;
+    }
+
+    while (j <= b[0][2]) {
+        res[k][0] = b[j][0];
+        res[k][1] = b[j][1];
+        res[k][2] = b[j][2];
+        j++; k++;
+    }
+
+    res[0][2] = k - 1;
+}
+
+
+void transposeSparse(int matrix[MAX][3], int trans[MAX][3]) {
+    int k = 1;
+    trans[0][0] = matrix[0][1];  
+    trans[0][1] = matrix[0][0];  
+    trans[0][2] = matrix[0][2];  
+
+    for (int col = 0; col < matrix[0][1]; col++) {
+        for (int i = 1; i <= matrix[0][2]; i++) {
+            if (matrix[i][1] == col) {
+                trans[k][0] = matrix[i][1];
+                trans[k][1] = matrix[i][0];
+                trans[k][2] = matrix[i][2];
+                k++;
+            }
+        }
+    }
+}
+
+int main() {
+    int a[MAX][3], b[MAX][3], res[MAX][3], trans[MAX][3];
+
+    readSparseMatrix(a, "first");
+    readSparseMatrix(b, "second");
+
+    if (a[0][0] != b[0][0] || a[0][1] != b[0][1]) {
+        printf("\nMatrix sizes are not the same. Cannot add.\n");
+        return 1;
+    }
+
+    addSparse(a, b, res);
+    sortSparse(res);  
+
+    printSparseMatrix("First Matrix", a);
+    printSparseMatrix("Second Matrix", b);
+    printSparseMatrix("Sum Matrix", res);
+
+    transposeSparse(res, trans);
+    printSparseMatrix("Transpose of Sum Matrix", trans);
+
+    return 0;
+}
